@@ -29,15 +29,15 @@ services:
 #      PHP_XDEBUG: 1
 #      PHP_XDEBUG_DEFAULT_ENABLE: 1
 #      PHP_XDEBUG_REMOTE_CONNECT_BACK: 0
-#      PHP_IDE_CONFIG: serverName=my-ide
+#      PHP_IDE_CONFIG: serverName=PHPSTORM
 #      PHP_XDEBUG_REMOTE_HOST: host.docker.internal # Docker 18.03+ & Linux/Mac/Win
 #      PHP_XDEBUG_REMOTE_HOST: 172.17.0.1 # Linux, Docker < 18.03
 #      PHP_XDEBUG_REMOTE_HOST: 10.254.254.254 # macOS, Docker < 18.03
 #      PHP_XDEBUG_REMOTE_HOST: 10.0.75.1 # Windows, Docker < 18.03
     volumes:
-      - ./:/var/www/html
+#      - ./backend/drupal/:/var/www/html
 ## For macOS users (https://wodby.com/stacks/drupal/docs/local/docker-for-mac/)
-#      - ./:/var/www/html:cached # User-guided caching
+      - ./backend/drupal/:/var/www/html:cached # User-guided caching
 #      - docker-sync:/var/www/html # Docker-sync
 ## For Xdebug profiler files
 #      - files:/mnt/files
@@ -56,9 +56,9 @@ services:
       NGINX_VHOST_PRESET: $NGINX_VHOST_PRESET
 #      NGINX_DRUPAL_FILE_PROXY_URL: http://example.com
     volumes:
-      - ./:/var/www/html
+#      - ./backend/drupal/:/var/www/html
 # For macOS users (https://wodby.com/stacks/drupal/docs/local/docker-for-mac/)
-#      - ./:/var/www/html:cached # User-guided caching
+      - ./backend/drupal/:/var/www/html:cached # User-guided caching
 #      - docker-sync:/var/www/html # Docker-sync
     labels:
       - 'traefik.backend=nginx'
@@ -121,19 +121,19 @@ services:
 #      - 'traefik.port=6081'
 #      - 'traefik.frontend.rule=Host:varnish.${PROJECT_BASE_URL}'
 
-#  redis:
-#    container_name: "${PROJECT_NAME}_redis"
-#    image: wodby/redis:$REDIS_TAG
+  redis:
+    container_name: "${PROJECT_NAME}_redis"
+    image: wodby/redis:$REDIS_TAG
 
-#  adminer:
-#    container_name: "${PROJECT_NAME}_adminer"
-#    image: wodby/adminer:$ADMINER_TAG
-#    environment:
-#      ADMINER_SALT: adminer-salt
-#    labels:
-#      - 'traefik.backend=adminer'
-#      - 'traefik.port=9000'
-#      - 'traefik.frontend.rule=Host:adminer.${PROJECT_BASE_URL}'
+  adminer:
+    container_name: "${PROJECT_NAME}_adminer"
+    image: wodby/adminer:$ADMINER_TAG
+    environment:
+      ADMINER_SALT: adminer-salt
+    labels:
+      - 'traefik.backend=adminer'
+      - 'traefik.port=9000'
+      - 'traefik.frontend.rule=Host:adminer.${PROJECT_BASE_URL}'
 
 #  pma:
 #    image: phpmyadmin/phpmyadmin
@@ -192,19 +192,22 @@ services:
 #      WEAVER_WORKER_TIMEOUT: 90
 #      WEAVER_CONVERSION_FALLBACK: "false"
 
-#  node:
-#    image: wodby/node:$NODE_TAG
-#    container_name: "${PROJECT_NAME}_node"
-#    working_dir: /var/www/html/path/to/theme/to/build
-#    labels:
-#      - 'traefik.backend=node'
-#      - 'traefik.port=3000'
-#      - 'traefik.frontend.rule=Host:front.${PROJECT_BASE_URL}'
-#    expose:
-#      - "3000"
-#    volumes:
-#      - ./:/var/www/html
-#    command: sh -c 'yarn install && yarn run start'
+  node:
+    image: wodby/node:$NODE_TAG
+    container_name: "${PROJECT_NAME}_node"
+    working_dir: /var/www/html/frontend
+    labels:
+      - 'traefik.backend=node'
+      - 'traefik.port=3000'
+      - 'traefik.frontend.rule=Host:front.${PROJECT_BASE_URL}'
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+      - "9226:9226"
+    volumes:
+      - ./:/var/www/html
+    command: sh -c 'yarn install && yarn run start'
 
 #  blackfire:
 #    image: blackfire/blackfire
@@ -263,7 +266,7 @@ services:
     container_name: "${PROJECT_NAME}_traefik"
     command: -c /dev/null --web --docker --logLevel=INFO
     ports:
-      - '8000:80'
+      - '80:80'
 #      - '8080:8080' # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
